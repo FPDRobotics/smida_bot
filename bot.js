@@ -6,7 +6,7 @@ var todo = '{ "todo": ['+'] }';
 
 var bot = new SlackBot(
 {
-	token: 'xoxb-180908282243-iUheztWH4Mkv2KlM48RzzjeH',
+	token: 'xoxb-redacted',
 	name: 'Smida Bot'
 });
 

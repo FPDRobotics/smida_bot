@@ -1,0 +1,15 @@
+{
+  "name": "smidabot",
+  "version": "1.0.0",
+  "description": "slack bot for fpd robotics",
+  "main": "bot.js",
+  "dependencies": {
+    "slackbots": "^1.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Nathan Smith",
+  "license": "ISC"
+}

@@ -2,12 +2,11 @@ var SlackBot = require('slackbots');
 //var fs = require('fs');
 var VERS = 'ALPHA';
 
-var ID = 'U5ASQ8A75';
 var todo = '{ "todo": ['+'] }';
 
 var bot = new SlackBot(
 {
-	token: 'xoxb-180908282243-OJOsrX0cMq4p4PUOQEyHgWcR',
+	token: 'xoxb-redacted',
 	name: 'Smida Bot'
 });
 
@@ -22,54 +21,33 @@ bot.on('close', function() {
 bot.on('message', function(data) { //message parsing.
 	if(data.type == "message"){
 		console.log(data);
-		if(data.text.includes('<@'+ID+'>')){ //for commands
-			raw = data.text.replace('<@'+ID+'>', '').trim();
-			args = raw.split(' ');
-			
-			if(args[0].toLowerCase() == 'add'){
-				if(args.length > 1){
-					info = findInfo(raw,0);
-					//if(info.end_location == -1) 
-					console.log('quoted info ' + info.text + ", end location: " + info.end_location);
-					console.log(raw.substring(info.end_location));
+		if(data.text.includes('@smidabot' @@ data.channel != null){ //for commands
+			args = data.text.replace('@smidabot', '').trim().substring(' ');
+			if(args.length > 1){
+				if(args[0].toLowerCase()=='todo'){
+					if(args.length > 2){
+						
+					}
 				}
-			}
-			//bot.postMessage(data.channel, "Mentioned with arguments: " + args);
+				bot.postMessage(data.channel, 'Valid commands: \ntodo <@assigned_to> <description>'
 		}
 		
 		
 		if(data.text.toLowerCase().includes("hi smidabot") && data.channel != null){
-			getRealName(data.user).then(function(name) {
-				return name.forEach(function(n) {
-					if(n != null)
-						return bot.postMessage(data.channel, 'Hey ' + n + '!');
-				});
+			console.log("contains greeting");
+			getRealName(data.user).then(function(name){
+				bot.postMessage(data.channel, 'Hey @' + name[0] + ' !');
 			});
 		}
 	}
 });
 
-var findInfo = function(text, start){
-	out = String(text.substring(start).match(/(?:')(.*')/g)||text.substring(start).match(/(?:")(.*")/g));
-	
-	if(out!=null){
-		end_l = text.indexOf(out)+out.length;
-		return{
-			text:out,
-			end_location:end_l
-		};
-	}
-	else return {
-		text:"",
-		end_location:-1
-	};
-}
-
 function getRealName(id){
 	return bot.getUsers().then(function(list){
 		return Promise.all(list.members.map(function (user) {
 			if(user.id == id)
-				return user.profile.first_name;
+				return user.name;
 		}));
 	});
+	return "can't obtain first name";
 }

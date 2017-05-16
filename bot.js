@@ -1,60 +1,66 @@
 var SlackBot = require('slackbots');
 var XLSX = require('xlsx');
 var fs = require('fs');
-var ENABLED = true;
-fs.readFile('/defaults.txt', 'utf8', function(err,data) {
-	if(err) console.log('error');
-	else{
-		console.log(data);
-	}
-});
+
 var VERS = 'DEV';
-
-
 var ID = 'U5ASQ8A75';
-var todo = '{ "todo": ['+'] }';
 
-var bot = new SlackBot(
-{
-	token: 'xoxb-redacted',
-	name: 'Smida Bot'
-});
-
-bot.on('start', function() //startup. need to load saved data here.
-{
-});
-
-bot.on('close', function()
-{
-	//fs.writeFile( "todo.json", JSON.stringify( todo ), "utf8");
-});
-
-bot.on('message', function(data) //message parsing.
-{
-	if(data.type == "message" && data.text != 'undefined'){
-		if(data.text.includes('<@'+ID+'>')){ //for commands
+var bot;
+fs.readFile('defaults.txt', 'utf8', function(err,data) {
+	if(err) console.log(err);
+	else{
+		KEY = data.split('\n')[0].split(' ')[0].trim();
+		bot = new SlackBot(
+		{
+			token: KEY,
+			name: 'Smida Bot'
+		});
 		
-			instructions = [];
-			raw = data.text.replace('<@'+ID+'>', '').trim();
-			remaining = raw;
+		
+		
+		
+		bot.on('start', function() //startup. need to load saved data here.
+		{
+		});
+
+		bot.on('close', function()
+		{
+			//fs.writeFile( "todo.json", JSON.stringify( todo ), "utf8");
+		});
+
+		bot.on('message', function(data) //message parsing.
+		{
+			if(data.type == "message" && data.text != 'undefined'){
+				if(data.text.includes('<@'+ID+'>')){ //for commands
+		
+					instructions = [];
+					raw = data.text.replace('<@'+ID+'>', '').trim();
+					remaining = raw;
 			
-			while(remaining.length > 1){
-				splitter = unfurl(remaining);
-				instructions.push(splitter);
-				remaining = remaining.substring(splitter.end).trim();
-			}
-			console.log(instructions);
-			json = buildJSON(instructions);
-		}
+					while(remaining.length > 1){
+						splitter = unfurl(remaining);
+						instructions.push(splitter);
+						remaining = remaining.substring(splitter.end).trim();
+					}
+					
+					console.log(instructions);
+					json = buildJSON(instructions);
+				}
 		
-		if(data.text.toLowerCase().includes("hi smidabot") && data.channel != null){
-			getRealName(data.user).then(function(name) {
-				return name.forEach(function(n) {
-					if(n != null)
-						return bot.postMessage(data.channel, 'Hey ' + n + '!');
-				});
-			});
-		}
+				if(data.text.toLowerCase().includes("hi smidabot") && data.channel != null){
+					getRealName(data.user).then(function(name) {
+						return name.forEach(function(n) {
+							if(n != null)
+								return bot.postMessage(data.channel, 'Hey ' + n + '!');
+						});
+					});
+				}
+			}
+		});
+		
+		
+		
+		
 	}
 });
 

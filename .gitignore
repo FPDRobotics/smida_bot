@@ -1,2 +1,3 @@
 **/node_modules
+defaults.txt
 #each user should seperately install slackbots and xlsx in dir via npm

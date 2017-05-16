@@ -1,6 +1,15 @@
 var SlackBot = require('slackbots');
-//var fs = require('fs');
+var XLSX = require('xlsx');
+var fs = require('fs');
+var ENABLED = true;
+fs.readFile('/defaults.txt', 'utf8', function(err,data) {
+	if(err) console.log('error');
+	else{
+		console.log(data);
+	}
+});
 var VERS = 'DEV';
+
 
 var ID = 'U5ASQ8A75';
 var todo = '{ "todo": ['+'] }';
@@ -12,8 +21,7 @@ var bot = new SlackBot(
 });
 
 bot.on('start', function() //startup. need to load saved data here.
-{ 
-
+{
 });
 
 bot.on('close', function()

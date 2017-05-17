@@ -5,6 +5,8 @@ var fs = require('fs');
 var VERS = 'DEV';
 var ID = 'U5ASQ8A75';
 
+var inventory_workbook;
+var inventory;
 var bot;
 fs.readFile('defaults.txt', 'utf8', function(err,data) {
 	if(err) console.log(err);
@@ -21,11 +23,17 @@ fs.readFile('defaults.txt', 'utf8', function(err,data) {
 		
 		bot.on('start', function() //startup. need to load saved data here.
 		{
+			inventory_workbook = XLSX.readFile('inventory.xlsx');
+			inventory = XLSX.utils.sheet_to_json(inventory_workbook.Sheets[inventory_workbook.SheetNames[0]]); //json object of inventory file.
+			console.log(inventory);
+			
+			console.log(inventoryFindItem("TeTrIX LaRgE", null));
 		});
 
-		bot.on('close', function()
+		bot.on('close', function()   
 		{
-			//fs.writeFile( "todo.json", JSON.stringify( todo ), "utf8");
+			inventory_workbook.Sheets[inventory_workbook.SheetNames[0]] = XLSX.utils.json_to_sheet(inventory);
+			XLSX.writeFile(inventory_workbook, 'inventory.xlsx');
 		});
 
 		bot.on('message', function(data) //message parsing.
@@ -64,10 +72,14 @@ fs.readFile('defaults.txt', 'utf8', function(err,data) {
 	}
 });
 
-function updateID(){
-	//x = bot.getUsers().then(function (list) {
-	//	
-	//}
+function inventoryFindItem(item_name, location){
+	results = [];
+	for(i = 0; i < inventory.length; i++){
+		item = inventory[i];
+		if(location != null && location != item.location) continue;
+		if(item.item.toLowerCase().includes(item_name.toLowerCase()))results.push(item);
+	}
+	return (results.length > 0 ? results : false);
 }
 
 function buildJSON(instructions)
@@ -97,7 +109,7 @@ function buildJSON(instructions)
 	return JSON.parse(json);
 }
 
-function unfurl(text)
+function unfurl(text, arg)
 {
 	empty_arg = {
 			type:'NUL',
@@ -105,7 +117,10 @@ function unfurl(text)
 			contents:''
 		}
 	args = text.split(' ');
-	if(checkFor(args[0], ["add","new","put"])){
+	if(checkFor(args[0], ["find", "where", "location"]){
+		info = findInfo(text,/'(.*?)'/g,0);
+	}
+	else if(checkFor(args[0], ["add","new","put"])){
 		info = findInfo(text,/'(.*?)'/g,0);
 		if(info.text == "")return empty_arg;
 		else return {
@@ -125,7 +140,8 @@ function unfurl(text)
 	}
 	else if(checkFor(args[0], ["assigned", "assign", "given"])){
 		info = findInfo(text,/@(\w+)/g,0);
-		return {
+		if(info.text == "")return empty_arg;
+		else return {
 			type:"assigned",
 			contents:info.text,
 			end:info.end_location
@@ -146,7 +162,7 @@ function checkFor(text, contents)
 		if(text == contents[i])return true;
 	return false;
 }
-
+	
 function findInfo(text, regex, start)
 {
 	out = text.substring(start).match(regex);

@@ -4,7 +4,8 @@
   "description": "slack bot for fpd robotics",
   "main": "bot.js",
   "dependencies": {
-    "slackbots": "^1.0.2"
+    "slackbots": "^1.0.2",
+    "xlsx": "^0.10.3"
   },
   "devDependencies": {},
   "scripts": {

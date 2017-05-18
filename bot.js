@@ -25,9 +25,9 @@ fs.readFile('defaults.txt', 'utf8', function(err,data) {
 		{
 			inventory_workbook = XLSX.readFile('inventory.xlsx');
 			inventory = XLSX.utils.sheet_to_json(inventory_workbook.Sheets[inventory_workbook.SheetNames[0]]); //json object of inventory file.
-			console.log(inventory);
+			//console.log(inventory);
 			
-			console.log(inventoryFindItem("TeTrIX LaRgE", null));
+			//console.log(inventoryFindItem("TeTrIX LaRgE", null));
 		});
 
 		bot.on('close', function()   
@@ -44,15 +44,36 @@ fs.readFile('defaults.txt', 'utf8', function(err,data) {
 					instructions = [];
 					raw = data.text.replace('<@'+ID+'>', '').trim();
 					remaining = raw;
-			
+					arg = null;
 					while(remaining.length > 1){
-						splitter = unfurl(remaining);
-						instructions.push(splitter);
+						splitter = unfurl(remaining, arg);
+						if(splitter.type!='end' && splitter.type!='NUL')
+							instructions.push(splitter);
 						remaining = remaining.substring(splitter.end).trim();
+						arg = splitter.arg;
 					}
 					
-					console.log(instructions);
-					json = buildJSON(instructions);
+					//console.log(instructions);
+					if(arg==1)
+						json = buildJSON(instructions);
+					else if(arg==2){
+						item = findInstructionType(instructions, 'inventory_search_item');
+						if(item != null){
+							console.log(item);
+							item_name = replaceAll("'",'',item.contents);
+							console.log(replaceAll("'",'',item.contents));
+							inv_json = inventoryFindItem(item_name, null);
+	
+							if(inv_json){
+								if(inv_json.length < 2){
+									inv_json = inv_json[0];
+									bot.postMessage(data.channel, '<@' + data.user + '>, ' + inv_json.item.toLowerCase() + ' is in ' +
+									inv_json.location + ' on ' + inv_json.shelf + ' in ' + inv_json.box + '. There are ' + inv_json.quantity + ' ' + inv_json.item.toLowerCase() + '(s) left in stock.'); 
+								}else
+									bot.postMessage(data.channel, '<@' + data.user + '>, multiple results were found. \n' + stringJsonArray(inv_json));
+							}else bot.postMessage(data.channel, '<@' + data.user + '>, there is no more of ' + item_name);
+						}else bot.postMessage(data.channel, 'Something went wrong with your search! Make sure you are properly formatting your question. </"@smidabot where is \'item\'');
+					}
 				}
 		
 				if(data.text.toLowerCase().includes("hi smidabot") && data.channel != null){
@@ -72,7 +93,32 @@ fs.readFile('defaults.txt', 'utf8', function(err,data) {
 	}
 });
 
-function inventoryFindItem(item_name, location){
+function stringJsonArray(arr){
+	str = "";
+	for(i = 0; i < arr.length; i++){
+		x = arr[i];
+		for(key in x){
+			str+=key+': ' + x[key] + ", ";  
+		}
+		if(i < arr.length-1)str+="\n";
+	}
+	return str;
+}
+
+function replaceAll(find, replace, str) {
+	var re = new RegExp(find, 'g'); str = str.replace(re, replace);
+		return str;
+}
+
+function findInstructionType(instructions, type)
+{
+	for(i = 0; i < instructions.length; i++)
+		if(instructions[i].type == type)return instructions[i];
+	return null;
+}
+
+function inventoryFindItem(item_name, location)
+{
 	results = [];
 	for(i = 0; i < inventory.length; i++){
 		item = inventory[i];
@@ -117,41 +163,53 @@ function unfurl(text, arg)
 			contents:''
 		}
 	args = text.split(' ');
-	if(checkFor(args[0], ["find", "where", "location"]){
+	// key: 2 > storage || 1 > to-do
+	if(checkFor(args[0], ["find", "where", "location"]) && (arg == 2 || arg == null)){
 		info = findInfo(text,/'(.*?)'/g,0);
+		if(info.text == "")return empty_arg;
+		else return{
+			type:"inventory_search_item",
+			contents:info.text,
+			end:info.end_location,
+			arg:2
+		}
 	}
-	else if(checkFor(args[0], ["add","new","put"])){
+	else if(checkFor(args[0], ["add","new","put"]) && (arg == 1 || arg == null)){
 		info = findInfo(text,/'(.*?)'/g,0);
 		if(info.text == "")return empty_arg;
 		else return {
 			type:"title",
 			contents:info.text,
-			end:info.end_location
+			end:info.end_location,
+			arg:1
 		}
 	}
-	else if(checkFor(args[0], ["in", "under", "for", "group", "grouped"])){
+	else if(checkFor(args[0], ["in", "under", "for", "group", "grouped"]) && (arg == 1 || arg == null)){
 		info = findInfo(text,/'(.*?)'/g,0);
 		if(info.text == "")return empty_arg;
 		else return {
 			type:"group",
 			contents:info.text,
-			end:info.end_location
+			end:info.end_location,
+			arg:1
 		}
 	}
-	else if(checkFor(args[0], ["assigned", "assign", "given"])){
+	else if(checkFor(args[0], ["assigned", "assign", "given"]) && (arg == 1 || arg == null)){
 		info = findInfo(text,/@(\w+)/g,0);
 		if(info.text == "")return empty_arg;
 		else return {
 			type:"assigned",
 			contents:info.text,
-			end:info.end_location
+			end:info.end_location,
+			arg:1
 		}
 	}
 	else{
 		return {
 			type:'end',
 			end:text.length,
-			contents:''
+			contents:'',
+			arg:arg
 		}
 	}
 }

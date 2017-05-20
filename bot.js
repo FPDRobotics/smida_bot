@@ -25,9 +25,8 @@ fs.readFile('defaults.txt', 'utf8', function(err,data) {
 		{
 			inventory_workbook = XLSX.readFile('inventory.xlsx');
 			inventory = XLSX.utils.sheet_to_json(inventory_workbook.Sheets[inventory_workbook.SheetNames[0]]); //json object of inventory file.
-			//console.log(inventory);
-			
-			//console.log(inventoryFindItem("TeTrIX LaRgE", null));
+		
+			console.log(levdistance("kitten","sitting"));
 		});
 
 		bot.on('close', function()   
@@ -93,12 +92,48 @@ fs.readFile('defaults.txt', 'utf8', function(err,data) {
 	}
 });
 
+function levdistance(tx, tx2){
+	d = [];//matrix for determining lev distance of two strings.
+	
+	for(i = 0; i <= tx.length; i++){ //initializing matrix
+		d[i]=[];
+		for(j = 0; j <= tx2.length; j++){
+			d[i][j]=0;
+		}
+	}
+	
+	for(i = 1; i <= tx.length; i++){
+		d[i][0]=i;
+	}
+	for(j = 1; j <= tx2.length; j++){
+		d[0][j]=j;
+	}
+	
+	for(i = 1; i <= tx.length; i++)
+		for(j = 1; j <= tx2.length; j++){
+			d[i][j] = min([(d[i-1][j] + 1),
+					       (d[i][j-1] + 1),
+						   (d[i-1][j-1] + (tx.charAt(i) == tx2.charAt(j)?0:1))
+					      ]);
+		}
+	console.log('done');
+	return d[tx.length,tx2.length];
+	
+}
+
+function min(arr){
+	l = arr[0];
+	if(arr.length > 1)
+		for(i = 1; i < arr.length; i++)l=(arr[i]<l?arr[i]:l);
+	return l;
+}
+
 function stringJsonArray(arr){
 	str = "";
 	for(i = 0; i < arr.length; i++){
 		x = arr[i];
 		for(key in x){
-			str+=key+': ' + x[key] + ", ";  
+			str+=key+': ' + x[key].replace(key, '') + ", ";  
 		}
 		if(i < arr.length-1)str+="\n";
 	}
@@ -106,8 +141,9 @@ function stringJsonArray(arr){
 }
 
 function replaceAll(find, replace, str) {
-	var re = new RegExp(find, 'g'); str = str.replace(re, replace);
-		return str;
+	var re = new RegExp(find, 'g');
+	str = str.replace(re, replace);
+	return str;
 }
 
 function findInstructionType(instructions, type)

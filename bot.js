@@ -25,8 +25,6 @@ fs.readFile('defaults.txt', 'utf8', function(err,data) {
 		{
 			inventory_workbook = XLSX.readFile('inventory.xlsx');
 			inventory = XLSX.utils.sheet_to_json(inventory_workbook.Sheets[inventory_workbook.SheetNames[0]]); //json object of inventory file.
-		
-			console.log(levdistance("kitten","sitting"));
 		});
 
 		bot.on('close', function()   
@@ -52,17 +50,14 @@ fs.readFile('defaults.txt', 'utf8', function(err,data) {
 						arg = splitter.arg;
 					}
 					
-					//console.log(instructions);
 					if(arg==1)
 						json = buildJSON(instructions);
+					
 					else if(arg==2){
 						item = findInstructionType(instructions, 'inventory_search_item');
 						if(item != null){
-							console.log(item);
 							item_name = replaceAll("'",'',item.contents);
-							console.log(replaceAll("'",'',item.contents));
 							inv_json = inventoryFindItem(item_name, null);
-	
 							if(inv_json){
 								if(inv_json.length < 2){
 									inv_json = inv_json[0];
@@ -95,36 +90,36 @@ fs.readFile('defaults.txt', 'utf8', function(err,data) {
 function levdistance(tx, tx2){
 	d = [];//matrix for determining lev distance of two strings.
 	
-	for(i = 0; i <= tx.length; i++){ //initializing matrix
-		d[i]=[];
+	for(k = 0; k <= tx.length; k++){ //initializing matrix
+		d[k]=[];
 		for(j = 0; j <= tx2.length; j++){
-			d[i][j]=0;
+			d[k][j]=0;
 		}
 	}
 	
-	for(i = 1; i <= tx.length; i++){
-		d[i][0]=i;
+	for(k = 1; k <= tx.length; k++){
+		d[k][0]=i;
 	}
 	for(j = 1; j <= tx2.length; j++){
 		d[0][j]=j;
 	}
 	
-	for(i = 1; i <= tx.length; i++)
+	for(k = 1; k <= tx.length; k++){
 		for(j = 1; j <= tx2.length; j++){
-			d[i][j] = min([(d[i-1][j] + 1),
-					       (d[i][j-1] + 1),
-						   (d[i-1][j-1] + (tx.charAt(i) == tx2.charAt(j)?0:1))
+			d[k][j] = min([(d[k-1][j] + 1),
+					       (d[k][j-1] + 1),
+						   (d[k-1][j-1] + (tx.charAt(k-1) == tx2.charAt(j-1)?0:1))
 					      ]);
 		}
-	console.log('done');
-	return d[tx.length,tx2.length];
+	}
+	return d[tx.length][tx2.length];
 	
 }
 
 function min(arr){
 	l = arr[0];
 	if(arr.length > 1)
-		for(i = 1; i < arr.length; i++)l=(arr[i]<l?arr[i]:l);
+		for(x = 1; x < arr.length; x++) l = (arr[x] < l ? arr[x] : l);
 	return l;
 }
 
@@ -154,14 +149,46 @@ function findInstructionType(instructions, type)
 }
 
 function inventoryFindItem(item_name, location)
-{
+{	
+	rl = item_name.split(' ').length;
 	results = [];
+	vm = item_name.length;
+	for(i = 0; i < inventory.length; i++){
+		item = inventory[i];
+		
+		if(location != null && location != item.location) continue;
+		
+		w = levdistance(item_name.toLowerCase(), item.item.toLowerCase());
+		if(w < vm){
+			results = [];
+			vm = w;
+		}
+		if(w == vm)
+			results.push(item);
+	}
+	
+	if(results.length > 0) return results;
+	else return false;
+	
+	
+	/*
 	for(i = 0; i < inventory.length; i++){
 		item = inventory[i];
 		if(location != null && location != item.location) continue;
-		if(item.item.toLowerCase().includes(item_name.toLowerCase()))results.push(item);
+		ri = item.split(' ').length;
+		resS.push(item);
+		if(ri > rl && gt < 1) resL.push(item);
+		else gt++;
 	}
+	if(gt < 1){
+		if(resL.length == 0)return false;
+		else if(resL.length == 1) return resL[0];
+		else return resL;
+	}
+	
+	
 	return (results.length > 0 ? results : false);
+	*/
 }
 
 function buildJSON(instructions)
